@@ -1,23 +1,28 @@
 基于敏感数据IAST模式的Burpsuite插件
 ===================================
-
+	
 #一、说明
+	
 基于敏感数据IAST模式的Burpsuite插件，用于甲乙方在做渗透测试或是应用系统安全检测时半自动发现接口返回敏感数据，并对该接口进行未授权、越权等简单测试。当前的检测逻辑还是比较简单的，各位可根据自己的实际业务对检测逻辑进行优化。
-
+	
 ###已完成：
+	
 + 敏感信息泄漏检测
 + 垂直越权访问检测
 + 未授权访问检测
-
+	
 ###计划中：
+	
 + 水平越权访问检测(解释请求报文,自动遍历数值类型的ID)
 + 欢迎提建议
-
+	
 #二、部署说明
+
 	需要安装jython2.7.0,并在burpsuite启用。
 [下载 jython2.7.0](http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.0/jython-installer-2.7.0.jar)
 	
 #三、目录说明
+
 	.
 	│─config.py      检测规则配置文件
 	│─Detection.py   检测逻辑主体
@@ -27,6 +32,7 @@
 	└─vullog         检测出来的漏洞记录文件存放目录，Unauthorized_access：越权访问、PersonalInfo：敏感信息泄漏、Unauthorized：未授权访问。 
 	
 #四、检测配置config.py
+	
 ```
 	# 漏洞记录文件存放目录
 	vullogpath = './vullog/'
@@ -47,7 +53,9 @@
 							}
 					}
 ```
+	
 #版本
+	
 + 作者: Mr.x
 + 版本: 1.0
 + 时间: 20190727
