@@ -6,10 +6,10 @@
 # 漏洞记录文件存放目录
 vullogpath = './vullog/'
 
-# 自动清除http请求中head中的身份认证字段
+# 自动清除http请求中head中的身份认证字段,大小写敏感
 rm_token_keys = ['token', 'Cookie']
 
-# 自定义response中json数据类型的敏感信息字段定义,不区分大小写
+# 自定义response中json数据类型的敏感信息字段定义,大小写不敏感
 personalinfo_json_keys = ['identity', 'phone', 'webchat', 'email', 'qq', 'mobile', 'chargename']
 
 # 自定义搜索出来的敏感信息进行过滤

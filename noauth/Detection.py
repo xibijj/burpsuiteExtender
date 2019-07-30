@@ -84,7 +84,8 @@ class Detect(threading.Thread):
     def CheckPersonalInfo(self):
         # 敏感信息泄漏
         personalinfo_json = "|".join(config.personalinfo_json_keys)
-        personalinfo_json_recmd = '"[\w+]{0,20}(?:%s)[\w+]{0,20}"[ \:]+"\w+"' %personalinfo_json
+        # 更新匹配中文正则
+        personalinfo_json_recmd = '"[\w+]{0,20}(?:%s)[\w+]{0,20}"[ \:]+"(?:.)+"' %personalinfo_json
         find_res =  self.find(personalinfo_json_recmd, self.response_body)
         re_cmd_list = []
         if find_res:
@@ -95,6 +96,7 @@ class Detect(threading.Thread):
                     re_cmd_list.append(r_str)
             if re_cmd_list:
                 print("\n[!] PersonalInfo: %s" % self.url)
+                print(re_cmd_list)
                 writevul(self.request_raw, 'PersonalInfo')
                 return True
         return False
@@ -113,11 +115,12 @@ class Detect(threading.Thread):
             code, head, html, redirect, log = hh.http(self.url, raw=replace_auth_raw)
 
             if code == self.response_status and len(html) == len(self.response_body):
-                print("\n[!] Unauthorized_access: %s" % self.url)
-                writevul(replace_auth_raw, 'Unauthorized_access')
+                print("\n[!] Auth replace: %s" % self.url)
+                writevul(replace_auth_raw, 'Auth_replace')
 
     def Doit(self):
         if self.CheckPersonalInfo():
+            # 个人敏感信息泄漏
             self.Unauthorized()
             self.Check_auth()
 

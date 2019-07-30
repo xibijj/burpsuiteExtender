@@ -29,7 +29,7 @@
 	│─hackhttp.py    Http请求方法封装模块
 	│─Logical.py     burpsuite插件入口文件
 	│
-	└─vullog         检测出来的漏洞记录文件存放目录，Unauthorized_access：越权访问、PersonalInfo：敏感信息泄漏、Unauthorized：未授权访问。 
+	└─vullog         检测出来的漏洞记录文件存放目录，auth_replace：越权访问、PersonalInfo：敏感信息泄漏、Unauthorized：未授权访问。 
 	
 #四、检测配置config.py
 	
