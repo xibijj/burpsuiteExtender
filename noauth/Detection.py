@@ -28,7 +28,6 @@ class Detect(threading.Thread):
         self.response = self.http["response"]
         self.response_body = self.http["response_body"]
         self.response_status = self.response.getStatusCode()
-        # self.response_hash = hashlib.md5(self.response_body).hexdigest()
 
         self.url = self.http["url"]
         self.head = self.http["head"]
@@ -57,7 +56,6 @@ class Detect(threading.Thread):
         else:
             raw = self.response_body
         find_res = self.find(r, raw)
-        # print 'find_res:', r, raw, find_res
         if find_res:
             for r_str in find_res:
                 if self.find("|".join(config.re_filter_keys), r_str):
@@ -102,10 +100,7 @@ class Detect(threading.Thread):
 
     def CheckPersonalInfo(self):
         # 敏感信息泄漏
-        personalinfo_json = "|".join(config.personalinfo_json_keys)
-        # 更新匹配中文正则
-        personalinfo_json_recmd = '"[\w+]{0,20}(?:%s)[\w+]{0,20}"[ \:]+".*?"' %personalinfo_json
-        re_res = self.checkContextByRecmd(personalinfo_json_recmd)
+        re_res = self.checkContextByRecmd(config.personalinfo_recmd)
         if re_res:
             print("\n[!] PersonalInfo: %s" % self.url)
             print(' | '.join(re_res))
