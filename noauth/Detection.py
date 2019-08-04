@@ -160,7 +160,7 @@ class Detect(threading.Thread):
                 replace_body_tmp = replace_raw[:var_end_index].replace(replace_body_str, aft_var)
                 replace_raw = replace_raw.replace(replace_raw[:var_end_index], replace_body_tmp)
                 code, head, html, replace_id_raw = 0, None, '', ''
-                print orig_replace_raw, replace_raw
+                # print orig_replace_raw, replace_raw
                 if method == 'GET':
                     replace_id_url = self.url.replace(orig_replace_raw, replace_raw)
                     replace_id_raw = self.request_raw.replace(orig_replace_raw, replace_raw)

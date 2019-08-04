@@ -37,7 +37,7 @@ class BurpExtender(IBurpExtender, IHttpListener):
 
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
         # if toolFlag == 64: #if tool 64 is repeater
-        if toolFlag == 4 or toolFlag == 8:  # if tool 4 is Proxy Tab 8 is Spider
+        if toolFlag == 4 or toolFlag == 8 or toolFlag == 64:  # if tool 4 is Proxy Tab 8 is Spider
             if not messageIsRequest:
                 response = messageInfo.getResponse()  # get response
                 analyzedResponse = self._helpers.analyzeResponse(response)
