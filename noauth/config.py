@@ -13,7 +13,7 @@ url_hash = True
 rm_token_keys = ['token', 'Cookie']
 
 # 自定义response中json数据类型的敏感信息字段定义,大小写不敏感
-personalinfo_json_keys = ['identity', 'phone', 'webchat', 'email', 'qq', 'mobile', 'chargename']
+personalinfo_json_keys = ['identity', 'phone', 'webchat', 'email', 'qq', 'mobile', 'chargename', 'pass', 'bank', 'card']
 
 # 自定义搜索出来的敏感信息进行过滤字段,大小写不敏感
 re_filter_keys = ['dont_delete_this_default_vaule', 'mobileDisplay', 'highSpeedCardNumber', 'payeeBankCode', 'payeeBankType']
@@ -26,7 +26,7 @@ black_urls = ['dont_delete_this_default_vaule', '\?auth.\w+']
 
 # 自定义替换身份认证信息如：token、Cookie等信息，用于越权测试，支持正则
 replace_auth = {'token':{
-                        'recmd': 'token: .*?',
+                        'recmd': 'token: .*',
                         'replace': 'token: fuckyouman...'
                         }
                 }
