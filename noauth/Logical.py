@@ -25,7 +25,7 @@ class BurpExtender(IBurpExtender, IHttpListener):
         self._callbacks = callbacks
         self._helpers = callbacks.getHelpers()  # 通用函数
         self._callbacks.setExtensionName("Logical Detection")
-        print('author: Mr.x 20190727 ver:1.0')
+        print('author: Mr.x 20190804 ver:1.1')
         # register ourselves as an HTTP listener
         callbacks.registerHttpListener(self)
 

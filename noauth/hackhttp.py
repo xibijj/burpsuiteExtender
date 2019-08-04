@@ -483,13 +483,14 @@ class hackhttp():
         content_type = headers.get('Content-Type', "")
         # Content-Type: application/x-www-form-urlencoded
         # Content-Type: multipart/form-data
-        if content_type.startswith('application/x-www-form-urlencoded'):
-            while 1:
-                line = raw.readline()
-                if line == '':
-                    rawbody = rawbody[:-2]
-                    break
-                rawbody += line.rstrip() + '\r\n'
+        # if content_type.startswith('application/x-www-form-urlencoded'):
+        #     while 1:
+        #         line = raw.readline()
+        #         if line == '':
+        #             rawbody = rawbody[:-2]
+        #             break
+        #         rawbody += line.rstrip() + '\r\n'
+
         if content_type.startswith('multipart/form-data'):
             while 1:
                 line = raw.readline()
@@ -508,6 +509,15 @@ class hackhttp():
                     rawbody += '\r\n'
                 else:
                     rawbody += line
+        # 修改支持json数据提交 20190803 by mr.x
+        else:
+            while 1:
+                line = raw.readline()
+                if line == '':
+                    rawbody = rawbody[:-2]
+                    break
+                rawbody += line.rstrip() + '\r\n'
+
         headers['Host'] = host
         headers['Content-Length'] = str(len(rawbody))
         return self._http(

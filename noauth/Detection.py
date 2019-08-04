@@ -4,20 +4,14 @@
 # @File    : Detect.py
 import config
 import re
-import hashlib
+import urlparse
 import threading
-import time
 import sys
 from hackhttp import hackhttp
+import unit
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
-def writevul(info, type):
-    f = open("%s/%s_%s_vul.log" %(config.vullogpath, time.strftime("%Y-%m-%d", time.localtime()), type), 'a')
-    vulinfo = "- - " * 30 + "\n%s\n\n" %info.replace('\r\n', '\n')
-    f.write(vulinfo)
-    f.close()
 
 class Detect(threading.Thread):
 # class Detect(object):
@@ -38,8 +32,9 @@ class Detect(threading.Thread):
 
         self.url = self.http["url"]
         self.head = self.http["head"]
+        self.method = self.http["method"]
 
-        # 每次调用都重新加载一次配置文件
+        # 每次调用都重新加载配置文件
         reload(config)
 
 
@@ -54,6 +49,23 @@ class Detect(threading.Thread):
             return re.sub(r, p, t, re.I)
         except:
             return False
+
+    def checkContextByRecmd(self, r, context=''):
+        re_cmd_list = []
+        if context:
+            raw = context
+        else:
+            raw = self.response_body
+        find_res = self.find(r, raw)
+        # print 'find_res:', r, raw, find_res
+        if find_res:
+            for r_str in find_res:
+                if self.find("|".join(config.re_filter_keys), r_str):
+                    continue
+                else:
+                    re_cmd_list.append(r_str)
+        return re_cmd_list
+
 
     def run(self):
         self.Doit()
@@ -71,34 +83,34 @@ class Detect(threading.Thread):
                     remove_auth_head = remove_auth_head.replace(v, '')
         return remove_auth_head
 
+    def curl(self, r_url, r_raw, compare=True):
+        hh = hackhttp()
+        code, head, html, redirect, log = hh.http(r_url, raw=r_raw)
+        if compare:
+            if code == 200 and len(html) == len(self.response_body):
+                return True
+            else:
+                return False
+        return (code, head, html)
+
     def Unauthorized(self):
         # 未授权访问
         rm_auth_raw = self.remove_auth()
-
-        hh = hackhttp()
-        code, head, html, redirect, log = hh.http(self.url, raw=rm_auth_raw)
-        if code == self.response_status and len(html) == len(self.response_body):
-            print("\n[!] Unauthorized: %s" %self.url)
-            writevul(rm_auth_raw, 'Unauthorized')
+        if self.curl(self.url, rm_auth_raw):
+            print("\n[!] Unauthorized: %s" % self.url)
+            unit.writevul(rm_auth_raw, 'Unauthorized')
 
     def CheckPersonalInfo(self):
         # 敏感信息泄漏
         personalinfo_json = "|".join(config.personalinfo_json_keys)
         # 更新匹配中文正则
-        personalinfo_json_recmd = '"[\w+]{0,20}(?:%s)[\w+]{0,20}"[ \:]+"(?:.)+"' %personalinfo_json
-        find_res =  self.find(personalinfo_json_recmd, self.response_body)
-        re_cmd_list = []
-        if find_res:
-            for r_str in find_res:
-                if self.find("|".join(config.personalinfo_json_filter_keys), r_str):
-                    continue
-                else:
-                    re_cmd_list.append(r_str)
-            if re_cmd_list:
-                print("\n[!] PersonalInfo: %s" % self.url)
-                print(re_cmd_list)
-                writevul(self.request_raw, 'PersonalInfo')
-                return True
+        personalinfo_json_recmd = '"[\w+]{0,20}(?:%s)[\w+]{0,20}"[ \:]+".*?"' %personalinfo_json
+        re_res = self.checkContextByRecmd(personalinfo_json_recmd)
+        if re_res:
+            print("\n[!] PersonalInfo: %s" % self.url)
+            print(' | '.join(re_res))
+            unit.writevul(self.request_raw, 'PersonalInfo')
+            return True
         return False
 
     def Check_auth(self):
@@ -111,19 +123,76 @@ class Detect(threading.Thread):
 
         if replace_auth_raw:
             # print replace_auth_raw
-            hh = hackhttp()
-            code, head, html, redirect, log = hh.http(self.url, raw=replace_auth_raw)
-
-            if code == self.response_status and len(html) == len(self.response_body):
+            if self.curl(self.url, replace_auth_raw):
                 print("\n[!] Auth replace: %s" % self.url)
-                writevul(replace_auth_raw, 'Auth_replace')
+                unit.writevul(replace_auth_raw, 'Auth_replace')
+
+    def creatPayload(self, arrs):
+        payload = []
+        payload.append(arrs)
+        t_p = []
+        for i in arrs:
+            i_1_int = int(i) + 1
+            t_p.append(str(i_1_int))
+        payload.append(t_p)
+        return payload
+
+    def check_idor(self):
+        # 不安全的对象引用（平行越权）
+        method = self.method
+        orig_replace_raw = ''
+        if method == 'GET':
+            orig_replace_raw = urlparse.urlparse(self.url).query
+        elif method == 'POST':
+            orig_replace_raw = self.request_body
+
+        replace_raw = orig_replace_raw
+        replace_ids = self.find(config.idor_rule['param'], replace_raw)
+        if replace_ids:
+            payloads = self.creatPayload(replace_ids)
+            original = payloads[0]
+            after = payloads[1]
+            for i in xrange(len(original)):
+                orig_var, aft_var = original[i], after[i]
+                var_start_index = replace_raw.find(orig_var)
+                var_end_index = var_start_index + len(orig_var)
+                replace_body_str = replace_raw[var_start_index:var_end_index]
+                replace_body_tmp = replace_raw[:var_end_index].replace(replace_body_str, aft_var)
+                replace_raw = replace_raw.replace(replace_raw[:var_end_index], replace_body_tmp)
+                code, head, html, replace_id_raw = 0, None, '', ''
+                print orig_replace_raw, replace_raw
+                if method == 'GET':
+                    replace_id_url = self.url.replace(orig_replace_raw, replace_raw)
+                    replace_id_raw = self.request_raw.replace(orig_replace_raw, replace_raw)
+                    code, head, html = self.curl(replace_id_url, replace_id_raw, compare=False)
+                elif method == 'POST':
+                    replace_id_raw = self.request_raw.replace(orig_replace_raw, replace_raw)
+                    code, head, html = self.curl(self.url, replace_id_raw, compare=False)
+                if code == 200:
+                    pinfo = self.checkContextByRecmd(config.idor_rule['result'], html)
+                    if pinfo:
+                        print("\n[!] IDOR: %s" % self.url)
+                        print(' | '.join(pinfo))
+                        unit.writevul(replace_id_raw, 'IDOR')
 
     def Doit(self):
-        if self.CheckPersonalInfo():
-            # 个人敏感信息泄漏
-            self.Unauthorized()
-            self.Check_auth()
+        # print 'Doit.....'
+        only_url = False
+        if config.url_hash:
+            only_url = unit.checkUrls(self.url)
 
+        if only_url is False:
+            if len([h for h in config.filter_files if urlparse.urlparse(self.url.lower()).path.endswith(h)]): return
+            if self.CheckPersonalInfo():
+                # 个人敏感信息泄漏
+                self.Unauthorized()
+                self.Check_auth()
+                self.check_idor()
+            elif self.find("|".join(config.black_urls), self.url):
+                # 黑名单检测机制,一定要检测的URL名单
+                self.Unauthorized()
+                self.Check_auth()
+                self.check_idor()
 
 
 if __name__ == '__main__':
