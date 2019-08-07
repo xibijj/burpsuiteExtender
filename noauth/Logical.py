@@ -25,7 +25,7 @@ class BurpExtender(IBurpExtender, IHttpListener):
         self._callbacks = callbacks
         self._helpers = callbacks.getHelpers()  # 通用函数
         self._callbacks.setExtensionName("Logical Detection")
-        print('author: Mr.x 20190804 ver:1.1')
+        print('author: Mr.x 20190807 ver:1.2')
         # register ourselves as an HTTP listener
         callbacks.registerHttpListener(self)
 
@@ -51,7 +51,10 @@ class BurpExtender(IBurpExtender, IHttpListener):
                 request_header = analyzedRequest.getHeaders()
 
                 trg_url = str(messageInfo.getUrl())
-                method = re.findall(r"(GET|POST) ", request_header[0])[0]
+                try:
+                    method = re.findall(r"(GET|POST) ", request_header[0])[0]
+                except:
+                    return None
 
                 # print analyzedResponse, analyzedRequest, request_header, method, trg_url, body_string
 
@@ -69,4 +72,4 @@ class BurpExtender(IBurpExtender, IHttpListener):
                 imp_module = self.import_module("Detection", ".")
                 t = imp_module.Detect(httpobj)
                 t.start()
-                del imp_module
+                # del imp_module

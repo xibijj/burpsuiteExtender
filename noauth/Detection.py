@@ -82,17 +82,22 @@ class Detect(threading.Thread):
         return remove_auth_head
 
     def curl(self, r_url, r_raw, compare=True):
-        hh = hackhttp()
-        code, head, html, redirect, log = hh.http(r_url, raw=r_raw)
-        if compare:
-            if code == 200 and len(html) == len(self.response_body):
-                return True
-            else:
-                return False
+        code, head, html = 0, None, ''
+        try:
+            hh = hackhttp()
+            code, head, html, redirect, log = hh.http(r_url, raw=r_raw)
+            if compare:
+                if code == 200 and len(html) == len(self.response_body):
+                    return True
+                else:
+                    return False
+        except:
+            pass
         return (code, head, html)
 
     def Unauthorized(self):
         # 未授权访问
+        if not self.find('|'.join(config.rm_token_keys), self.request_raw): return None
         rm_auth_raw = self.remove_auth()
         if self.curl(self.url, rm_auth_raw):
             print("\n[!] Unauthorized: %s" % self.url)
@@ -112,11 +117,13 @@ class Detect(threading.Thread):
         # 越权访问
         replace_auths = config.replace_auth
         replace_auth_raw = ''
+        key_flg = False
         for r in replace_auths:
             recmd, replacecmd = replace_auths[r]['recmd'], replace_auths[r]['replace']
+            if self.find(recmd, self.request_raw): key_flg = True
             replace_auth_raw = self.replace(recmd, replacecmd, self.request_raw)
 
-        if replace_auth_raw:
+        if replace_auth_raw and key_flg:
             # print replace_auth_raw
             if self.curl(self.url, replace_auth_raw):
                 print("\n[!] Auth replace: %s" % self.url)
@@ -172,6 +179,8 @@ class Detect(threading.Thread):
 
     def Doit(self):
         # print 'Doit.....'
+
+        self.Check_auth()
         only_url = False
         if config.url_hash:
             only_url = unit.checkUrls(self.url)
