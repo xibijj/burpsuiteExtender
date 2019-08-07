@@ -20,10 +20,10 @@
 
 	需要安装jython2.7.0，并在burpsuite启用，把浏览器代理设置为burpsuite，然后人工触发应用系统功能即可。
 - [下载 jython2.7.0](http://search.maven.org/remotecontent?filepath=org/python/jython-installer/2.7.0/jython-installer-2.7.0.jar)
-- ![插件安装](burpsuiteExtender/noauth/imgs/install01.png)
-- ![插件安装](burpsuiteExtender/noauth/imgs/install02.png)
-- ![插件使用](burpsuiteExtender/noauth/imgs/use01.png)
-- ![插件使用](burpsuiteExtender/noauth/imgs/use02.png)
+- ![插件安装](imgs/install01.png)
+- ![插件安装](imgs/install02.png)
+- ![插件使用](imgs/use01.png)
+- ![插件使用](imgs/use02.png)
 	
 # 三、目录说明
 
