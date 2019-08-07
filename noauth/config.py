@@ -13,7 +13,7 @@ url_hash = False
 rm_token_keys = ['token', 'Cookie']
 
 # 自定义response中JSON/XML/JS数据类型的敏感信息字段定义,大小写不敏感
-personalinfo_keys = ['identity', 'phone', 'webchat', 'email', 'qq', 'mobile', 'chargename', 'pass', 'bank', 'card']
+personalinfo_keys = ['identity', 'phone', 'webchat', 'email', 'qq', 'mobile', 'chargename', 'pass', 'bank', 'card', 'address']
 
 p_keys = "|".join(personalinfo_keys)
 json_recmd = '"[\w+]{0,20}(?:{recmd})[\w+]{0,20}"[ \:=]+".*?"'.replace('{recmd}', p_keys)
